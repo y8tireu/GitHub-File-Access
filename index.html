@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GitHub File Access App</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #000;
+            color: #fff;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+
+        #search-github {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 40px;
+        }
+
+        #search-container {
+            display: flex;
+            align-items: center;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        #search-input {
+            width: 400px;
+            padding: 10px;
+            border: none;
+            outline: none;
+            background-color: #333;
+            color: #ffffff;
+        }
+
+        #search-button {
+            padding: 10px 20px;
+            background: linear-gradient(90deg, red, yellow, green, cyan, blue, magenta, red);
+            background-size: 400% 400%;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            animation: rgb-gradient 8s infinite alternate;
+        }
+
+        #options-button {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #options-menu {
+            display: none;
+            position: absolute;
+            top: 40px;
+            left: 0;
+            background-color: #333;
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        #options-menu label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        #repo-form,
+        #user-form,
+        #recent-searches {
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #ffffff;
+            transition: color 0.3s;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 50px);
+            padding: 12px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: #333;
+            color: #ffffff;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        button {
+            padding: 15px 25px;
+            background: linear-gradient(90deg, red, yellow, green, cyan, blue, magenta, red);
+            background-size: 400% 400%;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            animation: rgb-gradient 8s infinite alternate;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        button:hover {
+            box-shadow: 0 0 10px rgb(0, 255, 255);
+        }
+
+        #file-list,
+        #repo-list {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        .file-item,
+        .repo-item {
+            background-color: #1a1a1a;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            color: #ffffff;
+        }
+
+        .file-item:hover,
+        .repo-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+        }
+
+        .repo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        h3 {
+            margin-top: 0;
+            color: #ffffff;
+        }
+
+        a {
+            color: #61dafb;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Styling for User Information Card */
+        .user-info-card {
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            border-radius: 10px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .user-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>GitHub File Access App</h1>
+
+    <!-- Global GitHub Search Bar -->
+    <div id="search-github">
+        <div id="search-container">
+            <input type="text" id="search-input" placeholder="Search user's repositories">
+            <button id="search-button">Search</button>
+        </div>
+        <div id="search-options">
+            <button id="options-button">⋮</button>
+            <div id="options-menu">
+                <label for="language-select">Language:</label>
+                <select id="language-select">
+                    <option value="all">All Languages</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="python">Python</option>
+                    <option value="java">Java</option>
+                    <!-- Add more languages as needed -->
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form to input GitHub repository URL -->
+    <form id="repo-form">
+        <label for="repo-url">Enter GitHub Repository URL:</label>
+        <input type="text" id="repo-url" name="repo-url" placeholder="https://github.com/username/repository" required>
+        <button type="submit">Access Files</button>
+    </form>
+
+    <!-- Form to input GitHub username -->
+    <form id="user-form">
+        <label for="username">Enter GitHub Username:</label>
+        <input type="text" id="username" name="username" placeholder="GitHub username" required>
+        <button type="submit">Search Repositories</button>
+    </form>
+
+    <!-- Section to display user information -->
+    <div id="user-info">
+        <!-- User information will be displayed here -->
+    </div>
+
+    <!-- Section to display the list of files -->
+    <div id="file-list">
+        <!-- Files will be displayed here -->
+    </div>
+
+    <!-- Section to display the list of repositories -->
+    <div id="repo-list">
+        <!-- Repositories will be displayed here -->
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const formRepo = document.getElementById('repo-form');
+            const formUser = document.getElementById('user-form');
+            const fileList = document.getElementById('file-list');
+            const repoList = document.getElementById('repo-list');
+            const searchButton = document.getElementById('search-button');
+            const searchInput = document.getElementById('search-input');
+            const optionsButton = document.getElementById('options-button');
+            const optionsMenu = document.getElementById('options-menu');
+            const userInfoDiv = document.getElementById('user-info');
+
+            let currentUsername = '';
+
+            // Toggle search options dropdown
+            optionsButton.addEventListener('click', () => {
+                optionsMenu.style.display = optionsMenu.style.display === 'block' ? 'none' : 'block';
+            });
+
+            // Event handler for accessing files in a repository
+            formRepo.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const repoUrl = document.getElementById('repo-url').value.trim();
+                if (repoUrl) {
+                    const repoInfo = parseGitHubUrl(repoUrl);
+                    if (repoInfo) {
+                        fetchRepoContents(repoInfo.owner, repoInfo.repo);
+                    } else {
+                        alert('Please enter a valid GitHub repository URL.');
+                    }
+                }
+            });
+
+            // Event handler for searching repositories of a user
+            formUser.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const username = document.getElementById('username').value.trim();
+                if (username) {
+                    currentUsername = username;
+                    fetchUserInfo(username);
+                    fetchUserRepositories(username);
+                }
+            });
+
+            // Event handler for searching repositories within a user's account
+            searchButton.addEventListener('click', function () {
+                const query = searchInput.value.trim();
+                const language = document.getElementById('language-select').value;
+
+                if (!currentUsername) {
+                    alert('Please search for a user first to use this feature.');
+                    return;
+                }
+
+                if (query) {
+                    let searchUrl = `https://github.com/search?q=user:${currentUsername}+${encodeURIComponent(query)}`;
+                    if (language !== 'all') {
+                        searchUrl += `+language:${language}`;
+                    }
+                    window.open(searchUrl, '_blank');
+                }
+            });
+
+            // Helper function to parse the GitHub repository URL
+            function parseGitHubUrl(url) {
+                const regex = /https?:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/)?$/;
+                const match = url.match(regex);
+                if (match) {
+                    return {
+                        owner: match[1],
+                        repo: match[2]
+                    };
+                } else {
+                    return null;
+                }
+            }
+
+            // Function to fetch repository contents
+            function fetchRepoContents(owner, repo) {
+                const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents`;
+                fetch(apiUrl)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('Repository not found or access denied.');
+                        }
+                    })
+                    .then(data => {
+                        displayFiles(data, owner, repo);
+                    })
+                    .catch(error => {
+                        alert(error.message);
+                    });
+            }
+
+            // Function to fetch user information
+            function fetchUserInfo(username) {
+                const apiUrl = `https://api.github.com/users/${username}`;
+
+                fetch(apiUrl)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('User not found or access denied.');
+                        }
+                    })
+                    .then(user => {
+                        displayUserInfo(user);
+                    })
+                    .catch(error => {
+                        alert(error.message);
+                    });
+            }
+
+            // Function to display user information
+            function displayUserInfo(user) {
+                userInfoDiv.innerHTML = `
+                    <div class="user-info-card">
+                        <img src="${user.avatar_url}" alt="${user.login}'s avatar" class="user-avatar">
+                        <h2>${user.login}</h2>
+                        <p>${user.bio || 'No bio available.'}</p>
+                        <p>Followers: ${user.followers} - Following: ${user.following}</p>
+                        <p>Public Repos: ${user.public_repos}</p>
+                        <a href="${user.html_url}" target="_blank">View GitHub Profile</a>
+                    </div>
+                `;
+            }
+
+            // Function to fetch repositories of a user
+            function fetchUserRepositories(username) {
+                const apiUrl = `https://api.github.com/users/${username}/repos`;
+                fetch(apiUrl)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('User not found or access denied.');
+                        }
+                    })
+                    .then(data => {
+                        displayRepositories(data, username);
+                    })
+                    .catch(error => {
+                        alert(error.message);
+                    });
+            }
+
+            // Function to display repository files
+            function displayFiles(files, owner, repo) {
+                fileList.innerHTML = ''; // Clear any existing content
+
+                if (files.length === 0) {
+                    fileList.innerHTML += '<p>No files found in this repository.</p>';
+                    return;
+                }
+
+                files.forEach(file => {
+                    if (file.type === 'file') {
+                        const fileItem = document.createElement('div');
+                        fileItem.classList.add('file-item');
+
+                        const fileName = document.createElement('h3');
+                        fileName.textContent = file.name;
+
+                        const fileLink = document.createElement('a');
+                        fileLink.href = file.download_url;
+                        fileLink.textContent = 'Download File';
+                        fileLink.download = file.name;
+
+                        fileItem.appendChild(fileName);
+                        fileItem.appendChild(fileLink);
+                        fileList.appendChild(fileItem);
+                    }
+                });
+            }
+
+            // Function to display repositories of a user
+            function displayRepositories(repos, username) {
+                repoList.innerHTML = ''; // Clear any existing content
+
+                if (repos.length === 0) {
+                    repoList.innerHTML += '<p>No repositories found for this user.</p>';
+                    return;
+                }
+
+                const repoGrid = document.createElement('div');
+                repoGrid.classList.add('repo-grid');
+
+                repos.forEach(repo => {
+                    const repoItem = document.createElement('div');
+                    repoItem.classList.add('repo-item');
+
+                    const repoName = document.createElement('h3');
+                    repoName.textContent = repo.name;
+
+                    const repoLink = document.createElement('a');
+                    repoLink.href = repo.html_url;
+                    repoLink.target = '_blank';
+                    repoLink.textContent = 'View Repository';
+
+                    // Bookmark button
+                    const bookmarkButton = document.createElement('button');
+                    bookmarkButton.textContent = 'Bookmark';
+                    bookmarkButton.addEventListener('click', () => {
+                        bookmarkRepository(repo);
+                    });
+
+                    repoItem.appendChild(repoName);
+                    repoItem.appendChild(repoLink);
+                    repoItem.appendChild(bookmarkButton);
+                    repoGrid.appendChild(repoItem);
+                });
+
+                repoList.appendChild(repoGrid);
+            }
+
+            // Function to bookmark a repository
+            function bookmarkRepository(repo) {
+                let bookmarks = JSON.parse(localStorage.getItem('bookmarkedRepos')) || [];
+                const isAlreadyBookmarked = bookmarks.some(bookmarkedRepo => bookmarkedRepo.id === repo.id);
+
+                if (!isAlreadyBookmarked) {
+                    bookmarks.push(repo);
+                    localStorage.setItem('bookmarkedRepos', JSON.stringify(bookmarks));
+                    alert('Repository bookmarked!');
+                } else {
+                    alert('This repository is already bookmarked.');
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
